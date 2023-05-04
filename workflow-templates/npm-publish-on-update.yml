@@ -1,0 +1,43 @@
+name: Publish to NPM
+
+on:
+  push:
+    branches:
+      - [ $default-branch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check package version
+        id: cpv
+        uses: PostHog/check-package-version@v2
+
+      - name: Echo versions
+        run: |
+            echo "Committed version: ${{ steps.cpv.outputs.committed-version }}"
+            echo "Published version: ${{ steps.cpv.outputs.published-version }}"
+
+      - name: Echo publish status
+        if: steps.cpv.outputs.is-new-version == 'false'
+        run: |
+            echo "package.json version did not change. Skipping npm publish."
+
+      - name: Install dependencies and build 🔧
+        if: steps.cpv.outputs.is-new-version == 'true'
+        run: npm ci && npm run build
+
+      - name: Publish package on NPM 📦
+        if: steps.cpv.outputs.is-new-version == 'true'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,7 @@
+{
+    "name": "Splitsies NPM publish workflow",
+    "description": "Workflow for publishing package updates to NPM",
+    "filePatterns": [
+        "package.json$"
+    ]
+}
